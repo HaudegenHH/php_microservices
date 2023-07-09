@@ -118,3 +118,9 @@ composer create-project symfony/skeleton:"6.3.*" project_name
 
 ---
 
+Addtional Libraries:
+
+```sh
+composer require --dev phpunit maker
+```
+
