@@ -118,9 +118,23 @@ composer create-project symfony/skeleton:"6.3.*" project_name
 
 ---
 
-Addtional Libraries:
+Additional Libraries:
 
 ```sh
 composer require --dev phpunit maker
 ```
+
+---
+
+https://www.toptal.com/developers/gitignore
+
+Search for: 
+- "Visual Studio Code" (,PHPStorm or whatever IDE you use)
+- "Symfony"
+
+- it ll create a gitignore for you which you add (not replace) to the existing .gitignore (eliminate duplicates)
+
+---
+
+
 
