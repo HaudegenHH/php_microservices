@@ -136,5 +136,127 @@ Search for:
 
 ---
 
+## Controllers, Routes, etc
 
+After installing the dependencies and setting up the symfony project, create a controller and the first route..
+
+- create "ProductsController.php" in src/Controller
+- git commit this 
+- and switch to a new branch "routes", because in this one we're just going to set up the first 
+  endpoint
+
+### Routing
+
+If you were creating lets say sth like a rest api, for example if you wanted to get all of the promotions you werent actually doing any kind of processing we were just hitting an endpoint and getting the data back and you 'd probably do sth like this..
+
+-------
+
+```sh
+class ProductsController 
+{
+  #[Route('/products/{id}/promotions', name: 'promotions', methods: 'GET')]
+  public function promotions() 
+  {}  
+}
+```
+
+--------
+
+- using attributes or annotations to create the endpoint, returning all of the promotions for a product with a specific id
+- also you define the name of that route and the methods which permissible for this endpoint
+  (saying here: only get requests are permissible)
+
+- so: if you were taking that kind of restful(!) approach where you were just hit an endpoint and get 
+  some resources back, then this would be the thing to do 
+- however thats not the approach that i'm taking. Its rather like: i want s.o. to hit an endpoint, do some processing (filtering/modifying in order to get the lowest price for a particular product), and for that youll do it little bit different...
+
+```sh
+#[Route('/products/{id}/lowest-price', name: 'lowest-price', methods: 'POST')]
+public function lowestPrice(int $int): Response 
+{} 
+```
+
+- unlike the restful approach, where in a POST request, a resource is created, here we will transfer JSON using POST to evaluate the best price and return it.
+- notice that you can grab the route parameter (the id in this case) directly in the signature
+- spin up the develpment server with
+
+```sh
+symfony serve -d
+```
+
+- like in docker "-d" stands for detached mode, meaning: the terminal is given back to us (server is 
+  running in the background without blocking the terminal)
+
+---
+
+- typically you might decide you gonna start with the domain so you are going to start creating the 
+  product entities or models, and then working on the actual logic of how the lowest price could be 
+  evaluated
+- that is probably the most common approach, but however: buildig a microservice you need to keep in
+  your mind where you fit in in the outside world because there might be a wider application which 
+  is dependent on the service, there might be other parts of development of the application which 
+  might be dependent on this and thus its a good idea to give those other parts of the application, 
+  those other services sth to play with, or at least sth which will return some data so that the 
+  other teams could actually continue doing their development, e.g. the dev ops engineers could 
+  start building out the network if they can actually hit the service and get some kind of response
+  back
+- so we jst put in a fake response, well, it wont be a faked response it be a real response with just 
+  some fake output fields. You could find yourself in a situation where you are building sth like
+  this, and you start with the internals (the algorithm for sorting, filtering, etc), BUT: you have
+  other teams, which might ask when this will be ready and theres nothing worse when you re trying 
+  to figure sth out, and being constantly badgered when sths going to be ready
+- a nice compromise is just to give the other teams sth to work with from the start
+- long story short: thats why we'll jst return a json response with a 200 status code, and as you can 
+  see its the same data which gets posted in, and all you are gonna do is youre just going to add to 
+  it or modify it if you need to..
+- ..and for that reason we could use a **data transfer object**, where you get the fields posted in,
+  deserialize it into an object, then do the filtering or modifying, and then serialize it again with 
+  the newly added/modified fields and just send it back
+
+```sh
+#[Route('/products/{id}/lowest-price', name: 'lowest-price', methods: 'POST')]
+public function lowestPrice(int $id): Response 
+{
+  return new JsonResponse([
+    "quantity" => 5,
+    "request_location" => "UK",
+    "voucher_code" => "OU812",
+    "request_date" => "2023-09-07",
+    "product_id" => $id
+  ], 200);
+}  
+```
+- try it out in Postman (or e.g. in VSCode with Thunder Client)
+
+- with that you have now a service which can be reached by other services and youre sending back a 
+  response in the format which is similar if not the same as what you will actually get sent back
+  when you have a finished product, but: its all quite "happy path"..
+- sth you might want to consider is also given the option of sending back an example error response
+- so that the other teams working on their little parts, can actually build in their own error 
+  handling as well
+- lets have a go at doing sth like that by adding a condition, so anyone working on other services
+  which will communicate with this service can actually send a header to our service like a force 
+  fail, just a particular key and if that key is present, then instead of sending back this 200 
+  happy path success response, you send back an error response 
+
+```sh
+#[Route('/products/{id}/lowest-price', name: 'lowest-price', methods: 'POST')]
+public function lowestPrice(int $id): Response 
+{
+  if($request->headers->has('force_fail')) {
+    return new JsonResponse(
+      ["error" => "Promotions Engine failure message"],
+      $request->headers->get('force_fail')
+    );
+  }        
+
+  return new JsonResponse([
+    "quantity" => 5,
+    "request_location" => "UK",
+    "voucher_code" => "OU812",
+    "request_date" => "2023-09-07",
+    "product_id" => $id
+  ], 200);
+}  
+```
 
