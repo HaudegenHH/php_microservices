@@ -172,7 +172,7 @@ class ProductsController
 
 ```sh
 #[Route('/products/{id}/lowest-price', name: 'lowest-price', methods: 'POST')]
-public function lowestPrice(int $int): Response 
+public function lowestPrice(int $id): Response 
 {} 
 ```
 
@@ -186,6 +186,12 @@ symfony serve -d
 
 - like in docker "-d" stands for detached mode, meaning: the terminal is given back to us (server is 
   running in the background without blocking the terminal)
+
+- if you need to stop the server
+
+```sh
+symfony local:server:stop
+```
 
 ---
 
@@ -259,4 +265,47 @@ public function lowestPrice(int $id): Response
   ], 200);
 }  
 ```
+---
+
+To illustrate how all of this actually work, go back over to Postman and add to the already existing headers (Accept and Content-Type, which are both set to "application/json") the "force_fail" key and as value use the status code 400.
+When sending this post request to the defined endpoint, you should get back the error message as JsonResponse with a status code which we wanted for this. (a 400 clientside error)
+And to incorporate serverside error, you can change this to 500.
+
+I'm just going to make a little tweak to this response, because like i said, we re going to be taking these initial values and then add to them, maybe do some modifying..
+
+```sh
+return new JsonResponse([
+  "quantity" => 5,
+  "request_location" => "UK",
+  "voucher_code" => "OU812",
+  "request_date" => "2023-09-07",
+  "product_id" => $id,
+  "price" => 100,
+  "discounted_price" => 50,
+  "promotion_id" => 3,
+  "promotion_name" => "Black Friday half price sale"
+], 200);
+```
+
+
+- so this is how we start from the outside, from the response and we ll work our way inwards, which is a bit different to probably the most typical way you'd work where you start from the inside and work your way outwards with the most complex logic first
+- but at least by doing it this way, we will always have a service which is reachable, which other services can communicate with and then as we do work our way inwards to the logic handling stuff, we ll then start to replace some of these values with the actual real ones
+
+---
+
+- now were having a controller and an endpoint and we re returning a response in json format
+- but we ve actually hard coded in the values for now, so lets think of the steps we re going to take from here:
+
+
+1. we want to take the json data which is posted into our service and deserialize it into a DTO
+  - for that lets have look what the DTO represents
+  - we re sending an enqiry into the service to see what is the lowest price that we can get for this 
+    set of data, so for now just call it an "EnquiryDTO"
+2. take that DTO and pass it into a kind of promotions filter in order to find the right 
+   promotions and to apply the correct promotion to it
+3. return the modified enquiry and serialize it again back into json and sent as the JsonResponse
+
+
+
+
 

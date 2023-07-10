@@ -24,7 +24,11 @@ class ProductsController
             "request_location" => "UK",
             "voucher_code" => "OU812",
             "request_date" => "2023-09-07",
-            "product_id" => $id
-        ], 200);
+            "product_id" => $id,
+            "price" => 100,
+            "discounted_price" => 50,
+            "promotion_id" => 3,
+            "promotion_name" => "Black Friday half price sale"
+        ], 200);          
     }  
 }
